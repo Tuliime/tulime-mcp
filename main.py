@@ -4,6 +4,7 @@ import os
 import re
 import time
 import uuid
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -14,6 +15,17 @@ from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
 from langchain_anthropic import ChatAnthropic
 from dotenv import load_dotenv
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("scraper.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -54,70 +66,32 @@ class News:
             "updatedAt": self.updated_at
         }
 
-# Configuration for target news sites
+# Configuration for target news sites - simplified to main domains
 UGANDA_NEWS_SITES = [
-    # {
-    #     "name": "New Vision", //To be removed or implement logging in for tulime
-    #     "url": "https://www.newvision.co.ug/category/business/agriculture",
-    #     "alternative_urls": [
-    #         "https://www.newvision.co.ug/search?q=agriculture",
-    #         "https://www.newvision.co.ug/search?q=farming"
-    #     ]
-    # },
-    # {
-    #     "name": "Daily Monitor", //To be removed
-    #     "url": "https://www.monitor.co.ug/uganda/business/farming",
-    #     "alternative_urls": [
-    #         "https://www.monitor.co.ug/uganda/magazines/farming",
-    #         "https://www.monitor.co.ug/uganda/search?q=agriculture"
-    #     ]
-    # },
-    # {
-    #     "name": "UBC", //To be removed
-    #     "url": "https://ubc.go.ug/category/agriculture",
-    #     "alternative_urls": [
-    #         "https://ubc.go.ug/?s=agriculture",
-    #         "https://ubc.go.ug/?s=farming"
-    #     ]
-    # },
-    # {
-    #     "name": "NTV Uganda",
-    #     "url": "https://www.ntv.co.ug/category/news/agriculture",
-    #     "alternative_urls": [
-    #         "https://www.ntv.co.ug/search?q=agriculture",
-    #         "https://www.ntv.co.ug/search?q=farming"
-    #     ]
-    # },
-    # {
-    #     "name": "NBS", //To be removed
-    #     "url": "https://nbs.ug/tag/agriculture/",
-    #     "alternative_urls": [
-    #         "https://nbs.ug/tag/farming/",
-    #         "https://nbs.ug/?s=agriculture"
-    #     ]
-    # },
+    {
+        "name": "New Vision",
+        "url": "https://www.newvision.co.ug"
+    },
+    {
+        "name": "Daily Monitor",
+        "url": "https://www.monitor.co.ug"
+    },
+    {
+        "name": "UBC",
+        "url": "https://ubc.go.ug"
+    },
+    {
+        "name": "NTV Uganda",
+        "url": "https://www.ntv.co.ug"
+    },
+    {
+        "name": "NBS",
+        "url": "https://nbs.ug"
+    },
     {
         "name": "Nile Post",
-        "url": "https://nilepost.co.ug/agriculture/",
-        # "alternative_urls": [
-        #     "https://nilepost.co.ug/?s=agriculture",
-        #     "https://nilepost.co.ug/?s=farming"
-        # ]
-            "alternative_urls": []
+        "url": "https://nilepost.co.ug"
     }
-]
-
-# Agriculture-related keywords for content filtering
-AGRICULTURE_KEYWORDS = [
-    "agriculture", "farming", "crops", "livestock", "irrigation",
-    "harvest", "maize", "coffee", "dairy", "cattle", "goats",
-    "vegetables", "fertilizer", "agricultural", "farm", "farmer",
-    "farmers", "seeds", "plantation", "soil", "poultry", "chickens",
-    "agribusiness", "agritech", "agronomy", "agroforestry", "banana",
-    "cassava", "cotton", "rice", "fish", "fisheries", "food security",
-    "pesticide", "drought", "rain", "weather", "climate", "grain",
-    "crop disease", "agricultural extension", "organic", "conservation",
-    "cooperative", "sustainable", "subsistence", "commercial farming"
 ]
 
 # Output directory for scraped data
@@ -175,44 +149,59 @@ class UgandaAgricultureScraper:
                 # Process each news site
                 for site in UGANDA_NEWS_SITES:
                     self.stats["sites_processed"] += 1
-                    print(f"Processing site: {site['name']}")
+                    logger.info(f"Processing site: {site['name']}")
                     
                     # Scrape main URL
                     await self.process_site(agent, site["name"], site["url"])
-                    
-                    # Scrape alternative URLs
-                    for alt_url in site["alternative_urls"]:
-                        await self.process_site(agent, site["name"], alt_url)
                 
-                print("Scraping complete!")
-                print(f"Statistics: {json.dumps(self.stats, indent=2)}")
+                logger.info("Scraping complete!")
+                logger.info(f"Statistics: {json.dumps(self.stats, indent=2)}")
 
     async def process_site(self, agent, site_name: str, url: str):
         """Process a single site URL to extract articles"""
-        # First, get all article links from the page
+        # First, navigate the site to find agriculture-related sections and articles
         links_prompt = f"""
-        Visit the URL {url} and extract all links that appear to be news articles about agriculture.
-        Focus on links that match these patterns:
-        - Links with 'agriculture', 'farming', 'crops', 'livestock' in the URL
-        - Links to article pages (not navigation, footer, or header links)
+        Visit the URL {url} and perform the following tasks:
+        
+        1. First, explore the site navigation to identify any agriculture-related sections or categories
+           (look for sections like "Agriculture", "Farming", "Rural Development", etc.)
+        
+        2. Search for and identify recent news articles related to agriculture in Uganda.
+           Look for content about:
+           - Farming practices
+           - Crop production
+           - Livestock
+           - Agricultural policy
+           - Irrigation
+           - Food security
+           - Agricultural innovation
+           - Weather impacts on farming
+           - Agricultural markets and prices
+           - Any other agriculture-related topics
+        
+        3. Extract links to these agriculture articles from both the navigation sections and any article listings.
         
         Return a JSON array of objects with the following structure:
         {{
             "url": "full article URL",
-            "title": "article title or link text"
+            "title": "article title or link text",
+            "description": "brief description if available"
         }}
         
-        Only include links that appear to be actual news articles.
+        Only include links that are specifically about agriculture or farming topics in Uganda.
         """
         
         messages = [
-            {"role": "system", "content": "You are an expert web scraper focusing on agriculture news from Uganda."},
+            {"role": "system", "content": "You are an expert web scraper focusing on agriculture news from Uganda. You can navigate websites, search for relevant content, and extract structured data."},
             {"role": "user", "content": links_prompt}
         ]
         
         try:
             links_response = await agent.ainvoke({"messages": messages})
             links_content = links_response.get("content", "")
+            
+            # Log the raw response
+            logger.info(f"Raw agent response for {url}:\n{links_content}")
             
             # Extract JSON from the response
             match = re.search(r'```json\n(.*?)```', links_content, re.DOTALL)
@@ -224,16 +213,16 @@ class UgandaAgricultureScraper:
                 if match:
                     links_json = links_content[match.start():]
                 else:
-                    print(f"Could not extract JSON from response for {url}")
+                    logger.error(f"Could not extract JSON from response for {url}")
                     return
             
             try:
                 article_links = json.loads(links_json)
                 if not isinstance(article_links, list):
-                    print(f"Expected list but got {type(article_links)} for {url}")
+                    logger.error(f"Expected list but got {type(article_links)} for {url}")
                     return
                 
-                print(f"Found {len(article_links)} potential article links on {url}")
+                logger.info(f"Found {len(article_links)} agriculture-related article links on {url}")
                 self.stats["articles_found"] += len(article_links)
                 
                 # Process each article link
@@ -256,28 +245,32 @@ class UgandaAgricultureScraper:
                     await asyncio.sleep(1)
                     
             except json.JSONDecodeError:
-                print(f"Failed to parse JSON from response for {url}")
-                print(f"Response content: {links_content[:200]}...")
+                logger.error(f"Failed to parse JSON from response for {url}")
+                logger.error(f"Response content: {links_content[:200]}...")
         
         except Exception as e:
-            print(f"Error processing {url}: {str(e)}")
+            logger.error(f"Error processing {url}: {str(e)}")
 
     async def process_article(self, agent, site_name: str, article_url: str):
         """Process a single article to extract content"""
         article_prompt = f"""
-        Visit the URL {article_url} and extract the following information:
+        Visit the URL {article_url} and extract information from this agriculture-related news article.
+        
+        Extract the following:
         
         1. Article title
         2. Full article text content
         3. Publication date
         4. Main image URL (if available)
+        5. Why this article is relevant to agriculture in Uganda (briefly explain what agricultural topics it covers)
         
         Return the data in JSON format with these fields:
         {{
             "title": "article title",
             "content": "full article text",
             "date": "publication date",
-            "image_url": "main image URL or empty string if none"
+            "image_url": "main image URL or empty string if none",
+            "agriculture_relevance": "explanation of how this relates to agriculture"
         }}
         
         Make sure to capture the complete article text, not just the first paragraph.
@@ -292,6 +285,9 @@ class UgandaAgricultureScraper:
             article_response = await agent.ainvoke({"messages": messages})
             article_content = article_response.get("content", "")
             
+            # Log the raw response
+            logger.info(f"Raw agent response for article {article_url}:\n{article_content}")
+            
             # Extract JSON from the response
             match = re.search(r'```json\n(.*?)```', article_content, re.DOTALL)
             if match:
@@ -302,24 +298,15 @@ class UgandaAgricultureScraper:
                 if match:
                     article_json = article_content[match.start():]
                 else:
-                    print(f"Could not extract JSON from response for {article_url}")
+                    logger.error(f"Could not extract JSON from response for {article_url}")
                     return
             
             try:
                 article_data = json.loads(article_json)
                 
-                # Check if this is agriculture-related content
-                is_agriculture = self.is_agriculture_related(
-                    article_data.get("title", ""), 
-                    article_data.get("content", "")
-                )
-                
-                if not is_agriculture:
-                    print(f"Skipping non-agriculture article: {article_url}")
-                    return
-                
+                # The agent has already verified this is agriculture-related
                 self.stats["agriculture_articles"] += 1
-                print(f"Processing agriculture article: {article_data.get('title', 'Unknown')}")
+                logger.info(f"Processing agriculture article: {article_data.get('title', 'Unknown')}")
                 
                 # Store the image URL directly
                 image_url = article_data.get("image_url", "")
@@ -339,21 +326,11 @@ class UgandaAgricultureScraper:
                 self.save_news_to_json(news)
                 
             except json.JSONDecodeError:
-                print(f"Failed to parse JSON from response for {article_url}")
-                print(f"Response content: {article_content[:200]}...")
+                logger.error(f"Failed to parse JSON from response for {article_url}")
+                logger.error(f"Response content: {article_content[:200]}...")
         
         except Exception as e:
-            print(f"Error processing article {article_url}: {str(e)}")
-
-    def is_agriculture_related(self, title: str, content: str) -> bool:
-        """Check if content is related to agriculture based on keywords"""
-        text = (title + " " + content).lower()
-        
-        for keyword in AGRICULTURE_KEYWORDS:
-            if keyword.lower() in text:
-                return True
-        
-        return False
+            logger.error(f"Error processing article {article_url}: {str(e)}")
 
     def save_news_to_json(self, news: News):
         """Save news article to JSON file"""
@@ -362,7 +339,7 @@ class UgandaAgricultureScraper:
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(news.to_dict(), f, indent=2, ensure_ascii=False)
         
-        print(f"Saved article to {output_file}")
+        logger.info(f"Saved article to {output_file}")
 
 async def main():
     scraper = UgandaAgricultureScraper()
@@ -370,6 +347,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-

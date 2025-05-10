@@ -1,0 +1,53 @@
+2025-05-10 22:35:13,369 - __main__ - INFO - Processing site: New Vision
+2025-05-10 22:35:19,530 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-05-10 22:35:44,949 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-05-10 22:35:54,738 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-05-10 22:35:58,629 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:35:58,632 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.417776 seconds
+2025-05-10 22:35:59,814 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:35:59,818 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.846383 seconds
+2025-05-10 22:36:19,829 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-05-10 22:36:19,865 - __main__ - INFO - Raw agent response for https://www.newvision.co.ug:
+
+2025-05-10 22:36:19,866 - __main__ - ERROR - Could not extract JSON from response for https://www.newvision.co.ug
+2025-05-10 22:36:19,866 - __main__ - INFO - Processing site: Daily Monitor
+2025-05-10 22:36:20,540 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 429 Too Many Requests"
+2025-05-10 22:36:20,542 - anthropic._base_client - INFO - Retrying request to /v1/messages in 14.000000 seconds
+2025-05-10 22:36:35,496 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:35,498 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.934289 seconds
+2025-05-10 22:36:37,045 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:37,051 - __main__ - ERROR - Error processing https://www.monitor.co.ug: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}}
+2025-05-10 22:36:37,051 - __main__ - INFO - Processing site: UBC
+2025-05-10 22:36:37,765 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:37,767 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.495828 seconds
+2025-05-10 22:36:38,804 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:38,806 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.893086 seconds
+2025-05-10 22:36:40,334 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:40,338 - __main__ - ERROR - Error processing https://ubc.go.ug: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}}
+2025-05-10 22:36:40,338 - __main__ - INFO - Processing site: NTV Uganda
+2025-05-10 22:36:41,645 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:41,646 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.382028 seconds
+2025-05-10 22:36:42,584 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:42,586 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.892498 seconds
+2025-05-10 22:36:44,028 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:44,032 - __main__ - ERROR - Error processing https://www.ntv.co.ug: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}}
+2025-05-10 22:36:44,032 - __main__ - INFO - Processing site: NBS
+2025-05-10 22:36:44,698 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:44,702 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.378066 seconds
+2025-05-10 22:36:45,672 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:45,674 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.884087 seconds
+2025-05-10 22:36:47,119 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:47,124 - __main__ - ERROR - Error processing https://nbs.ug: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}}
+2025-05-10 22:36:47,124 - __main__ - INFO - Processing site: Nile Post
+2025-05-10 22:36:47,703 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:47,705 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.492835 seconds
+2025-05-10 22:36:48,833 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:48,834 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.915280 seconds
+2025-05-10 22:36:50,480 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-05-10 22:36:50,483 - __main__ - ERROR - Error processing https://nilepost.co.ug: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}}
+2025-05-10 22:36:50,483 - __main__ - INFO - Scraping complete!
+2025-05-10 22:36:50,483 - __main__ - INFO - Statistics: {
+  "articles_found": 0,
+  "agriculture_articles": 0,
+  "sites_processed": 6
+}
