@@ -12,7 +12,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
-from langchain_anthropic import ChatAnthropic                                   
+from langchain_anthropic import ChatAnthropic
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -28,7 +28,6 @@ class News:
         source: str,
         source_url: str,
         image_url: str,
-        image_path: str,
         posted_at: str,
     ):
         self.id = str(uuid.uuid4())
@@ -38,8 +37,6 @@ class News:
         self.source = source
         self.source_url = source_url
         self.image_url = image_url
-        self.image_path = image_path
-        self.posted_at = posted_at
         self.created_at = datetime.now().isoformat()
         self.updated_at = datetime.now().isoformat()
     
@@ -53,61 +50,60 @@ class News:
             "source": self.source,
             "sourceUrl": self.source_url,
             "imageUrl": self.image_url,
-            "imagePath": self.image_path,
-            "postedAt": self.posted_at,
             "createdAt": self.created_at,
             "updatedAt": self.updated_at
         }
 
 # Configuration for target news sites
 UGANDA_NEWS_SITES = [
-    {
-        "name": "New Vision",
-        "url": "https://www.newvision.co.ug/category/business/agriculture",
-        "alternative_urls": [
-            "https://www.newvision.co.ug/search?q=agriculture",
-            "https://www.newvision.co.ug/search?q=farming"
-        ]
-    },
-    {
-        "name": "Daily Monitor",
-        "url": "https://www.monitor.co.ug/uganda/business/farming",
-        "alternative_urls": [
-            "https://www.monitor.co.ug/uganda/magazines/farming",
-            "https://www.monitor.co.ug/uganda/search?q=agriculture"
-        ]
-    },
-    {
-        "name": "UBC",
-        "url": "https://ubc.go.ug/category/agriculture",
-        "alternative_urls": [
-            "https://ubc.go.ug/?s=agriculture",
-            "https://ubc.go.ug/?s=farming"
-        ]
-    },
-    {
-        "name": "NTV Uganda",
-        "url": "https://www.ntv.co.ug/category/news/agriculture",
-        "alternative_urls": [
-            "https://www.ntv.co.ug/search?q=agriculture",
-            "https://www.ntv.co.ug/search?q=farming"
-        ]
-    },
-    {
-        "name": "NBS",
-        "url": "https://nbs.ug/tag/agriculture/",
-        "alternative_urls": [
-            "https://nbs.ug/tag/farming/",
-            "https://nbs.ug/?s=agriculture"
-        ]
-    },
+    # {
+    #     "name": "New Vision", //To be removed or implement logging in for tulime
+    #     "url": "https://www.newvision.co.ug/category/business/agriculture",
+    #     "alternative_urls": [
+    #         "https://www.newvision.co.ug/search?q=agriculture",
+    #         "https://www.newvision.co.ug/search?q=farming"
+    #     ]
+    # },
+    # {
+    #     "name": "Daily Monitor", //To be removed
+    #     "url": "https://www.monitor.co.ug/uganda/business/farming",
+    #     "alternative_urls": [
+    #         "https://www.monitor.co.ug/uganda/magazines/farming",
+    #         "https://www.monitor.co.ug/uganda/search?q=agriculture"
+    #     ]
+    # },
+    # {
+    #     "name": "UBC", //To be removed
+    #     "url": "https://ubc.go.ug/category/agriculture",
+    #     "alternative_urls": [
+    #         "https://ubc.go.ug/?s=agriculture",
+    #         "https://ubc.go.ug/?s=farming"
+    #     ]
+    # },
+    # {
+    #     "name": "NTV Uganda",
+    #     "url": "https://www.ntv.co.ug/category/news/agriculture",
+    #     "alternative_urls": [
+    #         "https://www.ntv.co.ug/search?q=agriculture",
+    #         "https://www.ntv.co.ug/search?q=farming"
+    #     ]
+    # },
+    # {
+    #     "name": "NBS", //To be removed
+    #     "url": "https://nbs.ug/tag/agriculture/",
+    #     "alternative_urls": [
+    #         "https://nbs.ug/tag/farming/",
+    #         "https://nbs.ug/?s=agriculture"
+    #     ]
+    # },
     {
         "name": "Nile Post",
         "url": "https://nilepost.co.ug/agriculture/",
-        "alternative_urls": [
-            "https://nilepost.co.ug/?s=agriculture",
-            "https://nilepost.co.ug/?s=farming"
-        ]
+        # "alternative_urls": [
+        #     "https://nilepost.co.ug/?s=agriculture",
+        #     "https://nilepost.co.ug/?s=farming"
+        # ]
+            "alternative_urls": []
     }
 ]
 
@@ -126,7 +122,6 @@ AGRICULTURE_KEYWORDS = [
 
 # Output directory for scraped data
 OUTPUT_DIR = Path("./uganda_agriculture_news")
-IMAGES_DIR = OUTPUT_DIR / "images"
 
 # Regular expressions for article detection
 ARTICLE_PATTERNS = [
@@ -142,9 +137,8 @@ ARTICLE_PATTERN = re.compile("|".join(ARTICLE_PATTERNS))
 
 class UgandaAgricultureScraper:
     def __init__(self):
-        # Create output directories
+        # Create output directory
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        IMAGES_DIR.mkdir(parents=True, exist_ok=True)
         
         # Set up model
         self.model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
@@ -167,7 +161,6 @@ class UgandaAgricultureScraper:
         self.stats = {
             "articles_found": 0,
             "agriculture_articles": 0,
-            "images_downloaded": 0,
             "sites_processed": 0
         }
 
@@ -328,18 +321,8 @@ class UgandaAgricultureScraper:
                 self.stats["agriculture_articles"] += 1
                 print(f"Processing agriculture article: {article_data.get('title', 'Unknown')}")
                 
-                # Handle image download if available
-                image_path = ""
+                # Store the image URL directly
                 image_url = article_data.get("image_url", "")
-                
-                if image_url:
-                    # Generate image filename
-                    image_filename = f"{uuid.uuid4()}.jpg"
-                    image_path = f"images/{image_filename}"
-                    
-                    # Download image
-                    await self.download_image(agent, image_url, str(IMAGES_DIR / image_filename))
-                    self.stats["images_downloaded"] += 1
                 
                 # Create News object
                 news = News(
@@ -349,7 +332,6 @@ class UgandaAgricultureScraper:
                     source=site_name,
                     source_url=article_url,
                     image_url=image_url,
-                    image_path=image_path,
                     posted_at=article_data.get("date", datetime.now().isoformat())
                 )
                 
@@ -362,43 +344,6 @@ class UgandaAgricultureScraper:
         
         except Exception as e:
             print(f"Error processing article {article_url}: {str(e)}")
-
-    async def download_image(self, agent, image_url: str, output_path: str):
-        """Download an image using the MCP agent"""
-        download_prompt = f"""
-        Download the image from this URL: {image_url}
-        
-        Return the image data as a base64-encoded string.
-        """
-        
-        messages = [
-            {"role": "system", "content": "You are an expert web scraper that can download images."},
-            {"role": "user", "content": download_prompt}
-        ]
-        
-        try:
-            download_response = await agent.ainvoke({"messages": messages})
-            download_content = download_response.get("content", "")
-            
-            # Extract base64 data
-            match = re.search(r'```base64\n(.*?)```', download_content, re.DOTALL)
-            if match:
-                base64_data = match.group(1)
-                
-                # Write image to file
-                import base64
-                with open(output_path, "wb") as f:
-                    f.write(base64.b64decode(base64_data))
-                
-                print(f"Successfully downloaded image to {output_path}")
-                return True
-            else:
-                print(f"Could not extract base64 data for image {image_url}")
-                return False
-        
-        except Exception as e:
-            print(f"Error downloading image {image_url}: {str(e)}")
-            return False
 
     def is_agriculture_related(self, title: str, content: str) -> bool:
         """Check if content is related to agriculture based on keywords"""

@@ -1,3 +1,10 @@
 {
-  "cSpell.words": ["BRIGHTDATA", "dotenv", "langchain", "langgraph", "UNLOCKER"]
+  "cSpell.words": [
+    "BRIGHTDATA",
+    "dotenv",
+    "langchain",
+    "langgraph",
+    "tulime",
+    "UNLOCKER"
+  ]
 }
